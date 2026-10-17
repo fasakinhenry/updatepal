@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #6903d3;
+  --color-primary-hover: #5702ae;
+  --color-primary-press: #470290;
+  --color-cream: #f9f1d7;
+  --color-ink: #141414;
+  --color-body: #5c5c5c;
+  --color-hairline: #ffe7f3;
+  --color-lilac: #ccb4e7;
+  --color-night: #130722;
+  --color-pink: #ed0578;
+  --font-display: "Spline Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-accent: "Sentient", Georgia, serif;
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --animate-bob: bob 4s ease-in-out infinite;
+  @keyframes bob { 50% { transform: translateY(-10px) rotate(-2deg); } }
+}
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  body { @apply bg-white font-sans text-ink antialiased; }
+  h1, h2, h3 { @apply font-display font-bold tracking-tight; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { animation: none !important; transition: none !important; }
+  }
+}
+
+@theme { --color-on-primary: #ffffff; }
+.dark {
+  color-scheme: dark;
+  --color-white: #1d1923; --color-ink: #f9f5fd; --color-body: #a9a4b3; --color-hairline: #2d2536;
+  --color-lilac: #4b3f62; --color-cream: #17111f; --color-primary: #9340f0; --color-primary-hover: #a455f5; --color-primary-press: #7f2fd8;
+}
+.dark body { background-color: #0f0a15; }
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}
