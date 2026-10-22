@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 
 export const inputCls = "mt-1 w-full rounded-xl border border-lilac bg-white px-4 py-3 focus-visible:outline-2 focus-visible:outline-primary";
@@ -9,7 +8,4 @@ export function Locked({ what }: { what: string }) {
 }
 export function NoOrg() {
   return <div className="rounded-2xl bg-cream p-6"><p className="font-display text-xl font-bold">switch to an organization first.</p><p className="mt-1 text-body">use the "acting as" menu, or create one.</p><Button to="/app/org/new" className="mt-3">create an organization</Button></div>;
-}
-export function Demo({ children }: { children?: ReactNode }) {
-  return <p className="mt-1 text-xs text-body">{children ?? "demo data for development. nothing here is real."}</p>;
 }

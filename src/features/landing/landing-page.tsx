@@ -3,8 +3,7 @@ import { Link } from "react-router";
 import { List, X, Sparkle, BookmarkSimple, UsersThree, FileText, Quotes, CaretDown, PaperPlaneTilt } from "@phosphor-icons/react";
 import { Button, Container, Pill } from "@/components/ui/button";
 import { Mascot } from "./mascot";
-import { faqs, opportunities, stories } from "./data";
-import { avatar } from "@/lib/mock";
+import { faqs, opportunities } from "./content";
 import { startMotion } from "./motion";
 
 const links = [["discover", "#discover"], ["publish", "#publish"], ["organizations", "#orgs"], ["faq", "#faq"]];
@@ -144,13 +143,13 @@ function Publish() {
 
 function Collab() {
   const flow = ["draft", "in review", "approved", "scheduled", "published"];
-  const crew = [["sade_b", "drafted the update"], ["tobi_a", "reviewed and approved"], ["henqsoft", "scheduled it for friday"]];
+  const crew = [["delegate", "drafts the update"], ["reviewer", "reviews and approves it"], ["owner", "schedules or publishes it"]];
   return (
     <section className="bg-cream py-20"><Container>
       <h2 className="max-w-2xl text-4xl sm:text-5xl">your whole team, <Em>one workflow.</Em></h2>
       <p className="mt-3 max-w-xl text-body">delegates draft, reviewers approve, owners publish. every step is visible, and nothing goes out without a person pressing the button.</p>
       <ol className="mt-8 flex flex-wrap gap-2">{flow.map((f, i) => <li key={f} className={`rounded-full px-4 py-2 text-sm font-bold ${i === 1 ? "bg-primary text-on-primary" : "border border-lilac bg-white text-primary"}`}>{f}</li>)}</ol>
-      <ul className="mt-6 grid gap-3 sm:grid-cols-3">{crew.map(([n, a]) => <li key={n} className="flex items-center gap-3 rounded-2xl bg-white p-4"><img src={avatar(n)} alt="" width={44} height={44} className="size-11 rounded-full bg-hairline" /><p className="text-sm"><b>{n}</b><br />{a}</p></li>)}</ul>
+      <ul className="mt-6 grid gap-3 sm:grid-cols-3">{crew.map(([n, a]) => <li key={n} className="rounded-2xl bg-white p-4 text-sm"><b>a {n}</b><br />{a}</li>)}</ul>
     </Container></section>
   );
 }
@@ -159,12 +158,12 @@ function Preview() {
   return (
     <section className="py-20"><Container>
       <h2 className="max-w-xl text-4xl sm:text-5xl">see it <Em>in action.</Em></h2>
-      <p className="mt-2 text-xs text-body">illustrative preview with demo content.</p>
+      <p className="mt-2 text-xs text-body">an illustration of the product.</p>
       <div className="mt-8 grid gap-5 md:grid-cols-2">
-        <article className="rounded-3xl border-2 border-hairline p-5"><span className="rounded-lg bg-[#d5f1ff] px-2.5 py-1 text-xs font-bold text-[#2597d0]">scholarship</span><h3 className="mt-3 text-xl">chevening 2027/28 is open</h3><p className="mt-2 text-body">fully funded masters in the uk. apply before 5 november.</p><p className="mt-3 text-sm font-semibold text-primary">closes nov 5 · united kingdom</p></article>
+        <article className="rounded-3xl border-2 border-hairline p-5"><span className="rounded-lg bg-[#d5f1ff] px-2.5 py-1 text-xs font-bold text-[#2597d0]">scholarship</span><h3 className="mt-3 text-xl">fully funded masters award is open</h3><p className="mt-2 text-body">open to graduates with two years of experience. apply before the deadline.</p><p className="mt-3 text-sm font-semibold text-primary">closes in 3 weeks · remote friendly</p></article>
         <div className="rounded-3xl bg-night p-5 text-on-primary"><p className="text-sm font-semibold text-lilac">organization overview</p>
-          <dl className="mt-3 grid grid-cols-3 gap-3 text-center">{[["drafts", "3"], ["scheduled", "2"], ["invites", "1"]].map(([k, v]) => <div key={k} className="rounded-2xl border border-on-primary/15 p-3"><dd className="font-display text-3xl font-bold">{v}</dd><dt className="text-xs text-on-primary/70">{k}</dt></div>)}</dl>
-          <p className="mt-4 text-sm text-on-primary/70">next up: campus hack challenge, friday 9:00.</p></div>
+          <dl className="mt-3 grid grid-cols-3 gap-3 text-center">{[["drafts", "0"], ["scheduled", "0"], ["invites", "0"]].map(([k, v]) => <div key={k} className="rounded-2xl border border-on-primary/15 p-3"><dd className="font-display text-3xl font-bold">{v}</dd><dt className="text-xs text-on-primary/70">{k}</dt></div>)}</dl>
+          <p className="mt-4 text-sm text-on-primary/70">example numbers. your own show up when you publish.</p></div>
       </div>
     </Container></section>
   );
@@ -178,15 +177,7 @@ function Orgs() {
       <div className="mt-10 grid gap-5 md:grid-cols-3">
         {f.map(([Icon, t, d]) => <div key={t} className="rounded-3xl bg-white p-6"><Icon size={32} weight="fill" className="text-primary" /><h3 className="mt-4 text-xl">{t}</h3><p className="mt-2 text-body">{d}</p></div>)}
       </div>
-      <div className="mt-12 grid gap-5 md:grid-cols-2">
-        {stories.map((s) => (
-          <figure key={s.name} className="rounded-3xl border-2 border-pink bg-hairline p-6 shadow-[3px_4px_0_0_#ed0578]">
-            <Quotes size={28} weight="fill" className="text-primary" />
-            <blockquote className="mt-3 text-lg font-semibold text-ink">{s.line}</blockquote>
-            <figcaption className="mt-4 text-sm text-body">{s.name}, {s.tag}</figcaption>
-          </figure>
-        ))}
-      </div>
+      <div className="mt-12 rounded-3xl border-2 border-pink bg-hairline p-6 shadow-[3px_4px_0_0_#ed0578]"><Quotes size={28} weight="fill" className="text-primary" /><h3 className="mt-3 text-2xl">stories live here.</h3><p className="mt-2 max-w-xl text-ink">when someone wins a scholarship or lands a role through an update, they can tell the story and link the opportunity, so the next person knows what worked.</p></div>
     </Container></section>
   );
 }

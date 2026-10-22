@@ -5,6 +5,9 @@ import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
+  build: {
+    rollupOptions: { output: { manualChunks: (id: string) => (id.includes("node_modules") ? (/phosphor/.test(id) ? "icons" : /react-router/.test(id) ? "router" : /node_modules\/(react-dom|react|scheduler)\//.test(id) ? "react" : undefined) : undefined) } },
+  },
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
   plugins: [
     react(),

@@ -1,9 +1,11 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router";
-import { CaretLeft, CaretRight, GoogleLogo, EnvelopeSimple } from "@phosphor-icons/react";
+import { CaretLeft, CaretRight, EnvelopeSimple } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
-import { useApp } from "@/app/state";
-import { avatar } from "@/lib/mock";
+import { useApp, type User } from "@/app/state";
+import { env } from "@/lib/env";
+import { ApiError } from "@/lib/http";
+import { authService } from "./auth-service";
 
 const slides = [
   ["discover", "find scholarships, jobs and grants from organizations you follow."],
@@ -12,12 +14,24 @@ const slides = [
   ["celebrate", "read stories from people who got in, and share yours."],
 ];
 type Mode = "signin" | "signup" | "forgot" | "verify";
-const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-// mock only: replace with calls to the backend. google oauth and account linking
-// (verified emails only) must be implemented server side.
+declare global {
+  interface Window { google?: { accounts: { id: { initialize(o: { client_id: string; callback: (r: { credential: string }) => void }): void; renderButton(el: HTMLElement, o: { theme: string; size: string; text: string; width: number }): void } } } }
+}
+// google identity button. the id token is sent to the backend, which verifies it. nothing is trusted client side.
+function GoogleButton({ onToken }: { onToken: (t: string) => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const cb = useRef(onToken); cb.current = onToken;
+  useEffect(() => {
+    const init = () => { window.google?.accounts.id.initialize({ client_id: env.googleClientId, callback: (r) => cb.current(r.credential) }); if (ref.current) window.google?.accounts.id.renderButton(ref.current, { theme: "outline", size: "large", text: "continue_with", width: 360 }); };
+    if (window.google) return init();
+    const s = document.createElement("script"); s.src = "https://accounts.google.com/gsi/client"; s.async = true; s.onload = init; document.head.appendChild(s);
+  }, []);
+  return <div ref={ref} className="min-h-11" />;
+}
+
 export function AuthPage() {
-  const { user, setUser } = useApp();
+  const { setUser } = useApp();
   const nav = useNavigate();
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
@@ -27,11 +41,10 @@ export function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [i, setI] = useState(0);
 
-  const enter = async (mail: string) => {
-    await wait(700);
-    const u = user && user.email === mail ? user : { email: mail, name: "", username: "", avatar: avatar(mail), bio: "", onboarded: false };
-    setUser(u);
-    nav(u.onboarded ? "/app" : "/onboarding");
+  const finish = (u: User) => { setUser(u); nav(u.onboarded ? "/app" : "/onboarding"); };
+  const fail = (e: unknown) => {
+    if (e instanceof ApiError) { if (e.code === "email_not_verified") return setMode("verify"); return setErr(e.message); }
+    setErr("something went wrong. your details are still here, try again.");
   };
   const submit = async (e: FormEvent) => {
     e.preventDefault(); setErr(""); setMsg("");
@@ -39,11 +52,13 @@ export function AuthPage() {
     if (mode !== "forgot" && pw.length < 8) return setErr("use at least 8 characters for your password.");
     setBusy(true);
     try {
-      if (mode === "forgot") { await wait(600); setMsg("if that email has an account, a reset link is on its way."); }
-      else if (mode === "signup") { await wait(600); setMode("verify"); }
-      else await enter(email);
-    } catch { setErr("something went wrong. your details are still here, try again."); } finally { setBusy(false); }
+      if (mode === "forgot") { await authService.forgot(email); setMsg("if that email has an account, a reset link is on its way."); }
+      else if (mode === "signup") { await authService.register(email, pw); setMode("verify"); }
+      else finish(await authService.login(email, pw));
+    } catch (x) { fail(x); } finally { setBusy(false); }
   };
+  const google = async (token: string) => { setBusy(true); setErr(""); try { finish(await authService.google(token)); } catch (x) { fail(x); } finally { setBusy(false); } };
+  const resend = async () => { setErr(""); setMsg(""); try { await authService.resend(email); setMsg("sent. check your inbox and spam folder."); } catch (x) { fail(x); } };
   const field = "mt-1 w-full rounded-xl border border-lilac bg-white px-4 py-3 focus-visible:outline-2 focus-visible:outline-primary";
 
   return (
@@ -53,25 +68,25 @@ export function AuthPage() {
         <h1 className="text-4xl">{{ signin: "welcome back.", signup: "create your account.", forgot: "reset your password.", verify: "check your email." }[mode]}</h1>
         {mode === "verify" ? (
           <div className="mt-6 max-w-md">
-            <p className="text-body">we sent a verification link to {email}. open it to confirm your address.</p>
-            <p className="mt-2 text-sm text-body">demo mode: no email is sent. continue to simulate a verified account.</p>
-            <Button className="mt-6" onClick={() => { setBusy(true); void enter(email); }} disabled={busy}>{busy ? "continuing..." : "i have verified my email"}</Button>
+            <p className="text-body">we sent a verification link to {email || "your email"}. open it to confirm your address, then sign in.</p>
+            <div className="mt-6 flex flex-wrap gap-2">
+              <Button onClick={() => void resend()}>resend email</Button><Button variant="outline" onClick={() => setMode("signin")}>back to sign in</Button>
+            </div>
+            <p role="status" className="mt-2 text-sm font-semibold text-primary">{msg}</p><p role="alert" className="text-sm font-semibold text-[#d02b2b]">{err}</p>
           </div>
         ) : (
           <div className="mt-6 max-w-md">
             {mode !== "forgot" && (
               <>
-                <Button variant="outline" className="w-full py-4 text-lg" onClick={() => { setBusy(true); void enter("google.user@example.com"); }} disabled={busy}><GoogleLogo weight="bold" size={22} />continue with google</Button>
-                <p className="mt-2 text-xs text-body">demo mode: no real google account is used.</p>
-                <p className="my-5 text-center text-sm text-body">or use email</p>
+                {env.googleClientId ? <GoogleButton onToken={(t) => void google(t)} /> : null}
+                {env.googleClientId && <p className="my-5 text-center text-sm text-body">or use email</p>}
               </>
             )}
-            <form onSubmit={submit} noValidate className="grid gap-4">
+            <form onSubmit={(e) => void submit(e)} noValidate className="grid gap-4">
               <label className="text-sm font-semibold">email<input className={field} type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} /></label>
               {mode !== "forgot" && <label className="text-sm font-semibold">password<input className={field} type="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} value={pw} onChange={(e) => setPw(e.target.value)} /></label>}
               <p role="alert" className="text-sm font-semibold text-[#d02b2b]">{err}</p>
               <p role="status" className="text-sm font-semibold text-primary">{msg}</p>
-              {msg && <Link to="/auth/reset" className="text-sm font-semibold text-primary">open the reset page (demo)</Link>}
               <Button type="submit" arrow disabled={busy} className="w-full justify-between text-lg"><span className="flex-1 text-center">{busy ? "please wait..." : { signin: "sign in", signup: "create account", forgot: "send reset link", verify: "" }[mode]}</span></Button>
             </form>
             <div className="mt-5 flex flex-wrap gap-4 text-sm font-semibold text-primary">
